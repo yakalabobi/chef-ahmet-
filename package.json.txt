@@ -1,0 +1,16 @@
+{
+  "name": "dijital-chef-frontend",
+  "version": "1.0.0",
+  "description": "AI Dijital Chef Uygulaması",
+  "main": "src/index.js",
+  "dependencies": {
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
+  },
+  "devDependencies": {
+    "react-scripts": "5.0.1"
+  },
+  "scripts": {
+    "start": "react-scripts start"
+  }
+}

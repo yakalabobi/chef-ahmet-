@@ -1,0 +1,79 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import List, Optional
+import random
+import uuid
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], allow_credentials=True,
+    allow_methods=["*"], allow_headers=["*"],
+)
+
+OSMANLI_MALZEMELER = [
+    "demirhindi", "safran", "kuş üzümü", "tarçın", "fıstık", "gül suyu", "nar ekşisi", "kayısı", "sumak"
+]
+DUNYA_MALZEMELER = [
+    "avokado", "wasabi", "trüf mantarı", "kimchi", "quinoa", "jalapeno", "maple şurubu", "kokos sütü"
+]
+TEKNIKLER = [
+    "kristalize etme", "ateşte tütsüleme", "kil içinde pişirme", "açık ateşte karamelize etme",
+    "çiçeklerle infüzyon", "odun fırınında mühürleme"
+]
+HAYAL_GUCU_ESINTILERI = [
+    "lezzetli bir masal", "gizemli saray gecesi", "keşfedilmemiş bir kıta", "altın çağ ziyafeti", "zamanda yolculuk"
+]
+
+class RecipeRequest(BaseModel):
+    cuisines: List[str] = ["Osmanlı", "Fransız"]
+    ingredients: List[str]
+    preferences: Optional[str] = None
+
+class RecipeResponse(BaseModel):
+    recipe_id: str
+    title: str
+    ingredients: List[str]
+    steps: List[str]
+    story: str
+    uniqueness_code: str
+
+def generate_unique_recipe(data: RecipeRequest) -> RecipeResponse:
+    base_ingredients = list(set(
+        data.ingredients +
+        random.sample(OSMANLI_MALZEMELER, k=2) +
+        random.sample(DUNYA_MALZEMELER, k=2)
+    ))
+    random.shuffle(base_ingredients)
+    chosen_tech = random.choice(TEKNIKLER)
+    chosen_theme = random.choice(HAYAL_GUCU_ESINTILERI)
+    cuisine_mix = " & ".join(data.cuisines)
+    random_word = uuid.uuid4().hex[:4]
+    title = f"{cuisine_mix} Buluşması: {chosen_tech.title()} ile {chosen_theme.title()} [{random_word}]"
+    steps = [
+        f"{base_ingredients[0]} ve {base_ingredients[1]} ile {chosen_tech} uygulayın.",
+        f"{base_ingredients[2]} ve {base_ingredients[3]} ekleyin, {chosen_theme} dokunuşu için baharatları harmanlayın.",
+        "Tüm malzemeleri düşük ateşte, sabırla pişirin.",
+        "Saray usulü sunum için gül yaprakları ve nar ekşisiyle süsleyin."
+    ]
+    story = (
+        f"Bu tarif, {cuisine_mix} mutfaklarının hayal gücüyle bir araya geldi. "
+        f"Bir {chosen_theme} sırasında, Osmanlı sarayında bir şef tarafından, "
+        f"keşfedilmemiş diyarların lezzetlerini bir araya getirmek için {chosen_tech} tekniğiyle yaratıldı. "
+        f"Tarifi hazırlarken, tarihin derinliklerinden gelen ilhamı ve inovasyonu sofranıza taşıyacaksınız!"
+    )
+    uniqueness_code = uuid.uuid4().hex
+    return RecipeResponse(
+        recipe_id=uniqueness_code[:8],
+        title=title,
+        ingredients=base_ingredients,
+        steps=steps,
+        story=story,
+        uniqueness_code=uniqueness_code
+    )
+
+@app.post("/generate-recipe", response_model=RecipeResponse)
+def generate_recipe_endpoint(request: RecipeRequest):
+    return generate_unique_recipe(request)

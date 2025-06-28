@@ -1,0 +1,100 @@
+import React, { useState } from "react";
+
+const BACKEND_URL = "http://localhost:8000/generate-recipe";
+
+export default function RecipeForm() {
+  const [cuisines, setCuisines] = useState("Osmanlı, Fransız");
+  const [ingredients, setIngredients] = useState("");
+  const [preferences, setPreferences] = useState("");
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setResult(null);
+    setLoading(true);
+    try {
+      const res = await fetch(BACKEND_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cuisines: cuisines.split(",").map((s) => s.trim()),
+          ingredients: ingredients.split(",").map((s) => s.trim()),
+          preferences: preferences
+        })
+      });
+      const data = await res.json();
+      setResult(data);
+    } catch (err) {
+      setResult({ error: "Bir hata oluştu." });
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div>
+      <form onSubmit={handleSubmit} style={{ marginBottom: 24 }}>
+        <div>
+          <label>
+            Mutfaklar (virgülle ayırın):<br />
+            <input
+              value={cuisines}
+              onChange={(e) => setCuisines(e.target.value)}
+              style={{ width: "100%" }}
+              required
+            />
+          </label>
+        </div>
+        <div>
+          <label>
+            Malzemeler (virgülle ayırın):<br />
+            <input
+              value={ingredients}
+              onChange={(e) => setIngredients(e.target.value)}
+              style={{ width: "100%" }}
+              required
+            />
+          </label>
+        </div>
+        <div>
+          <label>
+            Tercihler/Ozel Notlar:<br />
+            <input
+              value={preferences}
+              onChange={(e) => setPreferences(e.target.value)}
+              style={{ width: "100%" }}
+            />
+          </label>
+        </div>
+        <button type="submit" disabled={loading} style={{ marginTop: 12 }}>
+          {loading ? "Üretiliyor..." : "Tarif Üret"}
+        </button>
+      </form>
+
+      {result && result.error && <div style={{ color: "red" }}>{result.error}</div>}
+
+      {result && !result.error && (
+        <div style={{ background: "#faf7ef", padding: 18, borderRadius: 8 }}>
+          <h2>{result.title}</h2>
+          <p><b>Tarif ID:</b> {result.recipe_id}</p>
+          <p><b>Malzemeler:</b></p>
+          <ul>
+            {result.ingredients.map((ing, i) => (
+              <li key={i}>{ing}</li>
+            ))}
+          </ul>
+          <p><b>Adımlar:</b></p>
+          <ol>
+            {result.steps.map((step, i) => (
+              <li key={i}>{step}</li>
+            ))}
+          </ol>
+          <p><b>Hikaye:</b> {result.story}</p>
+          <p style={{ fontSize: 12, color: "#aaa" }}>
+            Unik Kod: {result.uniqueness_code}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}

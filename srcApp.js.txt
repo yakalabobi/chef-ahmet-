@@ -1,0 +1,13 @@
+import React from "react";
+import RecipeForm from "./components/RecipeForm";
+
+function App() {
+  return (
+    <div style={{ maxWidth: 600, margin: "40px auto", fontFamily: "sans-serif" }}>
+      <h1>AI Dijital Chef</h1>
+      <RecipeForm />
+    </div>
+  );
+}
+
+export default App;
